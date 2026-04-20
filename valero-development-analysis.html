@@ -535,37 +535,40 @@
   <div class="card">
     <h2>Construction Cost Buildup — 3 Scenarios</h2>
     <p>Non-historic district status eliminates the 10-15% historic premium. Numbers below reflect mid-grade finishes (LVP, quartz, builder-grade appliances) with Hardie siding (still recommended for durability in SA climate).</p>
-    <table>
+    <div style="overflow-x:auto;">
+    <table style="min-width: 1000px;">
       <thead>
         <tr>
           <th>Line Item</th>
-          <th class="num">Option A: SFR<br>1,700 sf, 2-story</th>
-          <th class="num">Option B: Duplex<br>2,000 sf, side-by-side</th>
-          <th class="num">Option C: 3-Story SFR<br>2,000 sf w/ garage</th>
+          <th class="num">A: SFR<br>1,700 sf, 2-story</th>
+          <th class="num">B: Duplex<br>2,000 sf</th>
+          <th class="num">C: 3-Story SFR<br>2,000 sf w/ garage</th>
+          <th class="num">D: Premium Duplex<br>3,000 sf w/ rooftops</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td>Hard cost base (sqft × $/sf)</td><td class="num">$314,500 ($185)</td><td class="num">$420,000 ($210)</td><td class="num">$450,000 ($225)</td></tr>
-        <tr><td>Site prep / tree clearing</td><td class="num">$8,000</td><td class="num">$10,000</td><td class="num">$10,000</td></tr>
-        <tr><td>Utility tie-ins</td><td class="num">$10,000</td><td class="num">$18,000</td><td class="num">$12,000</td></tr>
-        <tr><td>SAWS impact fees</td><td class="num">$8,000</td><td class="num">$15,500</td><td class="num">$8,000</td></tr>
-        <tr><td>City permits + plan review</td><td class="num">$4,500</td><td class="num">$7,000</td><td class="num">$5,500</td></tr>
-        <tr><td>Architect (8-9% of hard)</td><td class="num">$25,160</td><td class="num">$33,600</td><td class="num">$40,500</td></tr>
-        <tr><td>Engineering (structural + civil)</td><td class="num">$5,000</td><td class="num">$8,000</td><td class="num">$8,500</td></tr>
-        <tr><td>Survey + geotech</td><td class="num">$3,500</td><td class="num">$4,500</td><td class="num">$4,000</td></tr>
-        <tr><td>Builder's risk insurance</td><td class="num">$5,000</td><td class="num">$7,500</td><td class="num">$7,000</td></tr>
-        <tr><td>Property tax during construction</td><td class="num">$1,500</td><td class="num">$2,500</td><td class="num">$2,000</td></tr>
-        <tr><td>Rezoning / IDZ application</td><td class="num" style="color:#3fb950">$0</td><td class="num" style="color:#f85149">$15,000</td><td class="num" style="color:#3fb950">$0</td></tr>
-        <tr><td>Contingency (8-10% of hard)</td><td class="num">$25,160</td><td class="num">$42,000</td><td class="num">$45,000</td></tr>
-        <tr class="subtotal"><td>Subtotal (pre-financing)</td><td class="num">$410,320</td><td class="num">$583,600</td><td class="num">$592,500</td></tr>
-        <tr><td>Construction loan interest (7.5%)</td><td class="num">$12,310</td><td class="num">$24,500</td><td class="num">$21,325</td></tr>
-        <tr><td>Loan origination + closing (1.5%)</td><td class="num">$4,924</td><td class="num">$7,003</td><td class="num">$7,110</td></tr>
-        <tr class="total"><td>TOTAL ALL-IN DEVELOPMENT COST</td><td class="num">$427,554</td><td class="num">$615,103</td><td class="num">$620,935</td></tr>
-        <tr><td>Per sqft (all-in)</td><td class="num">$251</td><td class="num">$308</td><td class="num">$310</td></tr>
-        <tr><td>Equity required (20%)</td><td class="num bold">$85,511</td><td class="num bold">$123,021</td><td class="num bold">$124,187</td></tr>
-        <tr><td>Permanent loan (80%)</td><td class="num">$342,043</td><td class="num">$492,082</td><td class="num">$496,748</td></tr>
+        <tr><td>Hard cost base (sqft × $/sf)</td><td class="num">$314,500 ($185)</td><td class="num">$420,000 ($210)</td><td class="num">$450,000 ($225)</td><td class="num">$660,000 ($220)</td></tr>
+        <tr><td>Site prep / tree clearing</td><td class="num">$8,000</td><td class="num">$10,000</td><td class="num">$10,000</td><td class="num">$10,000</td></tr>
+        <tr><td>Utility tie-ins + Ashby sewer lateral</td><td class="num">$20,000</td><td class="num">$30,000</td><td class="num">$22,000</td><td class="num">$32,000</td></tr>
+        <tr><td>SAWS impact fees</td><td class="num">$8,000</td><td class="num">$15,500</td><td class="num">$8,000</td><td class="num">$15,500</td></tr>
+        <tr><td>City permits + plan review</td><td class="num">$4,500</td><td class="num">$7,000</td><td class="num">$5,500</td><td class="num">$7,000</td></tr>
+        <tr><td>Architect (8-9% of hard)</td><td class="num">$25,160</td><td class="num">$33,600</td><td class="num">$40,500</td><td class="num">$59,400</td></tr>
+        <tr><td>Engineering (+rooftop struct/waterproof on D)</td><td class="num">$5,000</td><td class="num">$8,000</td><td class="num">$8,500</td><td class="num">$29,000</td></tr>
+        <tr><td>Survey + geotech</td><td class="num">$3,500</td><td class="num">$4,500</td><td class="num">$4,000</td><td class="num">$4,500</td></tr>
+        <tr><td>Builder's risk insurance</td><td class="num">$5,000</td><td class="num">$7,500</td><td class="num">$7,000</td><td class="num">$9,000</td></tr>
+        <tr><td>Property tax during construction</td><td class="num">$1,500</td><td class="num">$2,500</td><td class="num">$2,000</td><td class="num">$3,000</td></tr>
+        <tr><td>Rezoning / IDZ application</td><td class="num" style="color:#3fb950">$0</td><td class="num" style="color:#f85149">$15,000</td><td class="num" style="color:#3fb950">$0</td><td class="num" style="color:#f85149">$15,000</td></tr>
+        <tr><td>Contingency (8-10% of hard)</td><td class="num">$25,160</td><td class="num">$42,000</td><td class="num">$45,000</td><td class="num">$66,000</td></tr>
+        <tr class="subtotal"><td>Subtotal (pre-financing)</td><td class="num">$420,320</td><td class="num">$595,600</td><td class="num">$602,500</td><td class="num">$910,400</td></tr>
+        <tr><td>Construction loan interest (7.5%)</td><td class="num">$13,910</td><td class="num">$24,985</td><td class="num">$21,690</td><td class="num">$38,237</td></tr>
+        <tr><td>Loan origination + closing (1.5%)</td><td class="num">$3,324</td><td class="num">$4,518</td><td class="num">$6,745</td><td class="num">$10,363</td></tr>
+        <tr class="total"><td>TOTAL ALL-IN DEVELOPMENT COST</td><td class="num">$437,554</td><td class="num">$625,103</td><td class="num">$630,935</td><td class="num">$959,000</td></tr>
+        <tr><td>Per sqft (all-in)</td><td class="num">$257</td><td class="num">$313</td><td class="num">$315</td><td class="num">$320</td></tr>
+        <tr><td>Equity required (20%)</td><td class="num bold">$87,511</td><td class="num bold">$125,021</td><td class="num bold">$126,187</td><td class="num bold">$191,800</td></tr>
+        <tr><td>Permanent loan (80%)</td><td class="num">$350,043</td><td class="num">$500,082</td><td class="num">$504,748</td><td class="num">$767,200</td></tr>
       </tbody>
     </table>
+    </div>
     <p class="footnote">Numbers match the Excel model (Valero Rental Hold ROI Model.xlsx — Cost Buildup tab). Change any input on the Assumptions tab to see all downstream effects.</p>
   </div>
 
@@ -586,36 +589,39 @@
 <div id="revenue" class="panel">
   <div class="card">
     <h2>Year-1 Revenue &amp; Operating Pro Forma</h2>
-    <table>
+    <div style="overflow-x:auto;">
+    <table style="min-width: 1000px;">
       <thead>
         <tr>
           <th>Line Item</th>
-          <th class="num">Option A: SFR</th>
-          <th class="num">Option B: Duplex</th>
-          <th class="num">Option C: 3-Story</th>
+          <th class="num">A: SFR</th>
+          <th class="num">B: Duplex</th>
+          <th class="num">C: 3-Story</th>
+          <th class="num">D: Premium Duplex</th>
           <th>Basis</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td>Monthly rent per unit</td><td class="num">$3,285</td><td class="num">$1,900</td><td class="num">$3,900</td><td>130 Valero / market new-build</td></tr>
-        <tr><td>Units</td><td class="num">1</td><td class="num">2</td><td class="num">1</td><td></td></tr>
-        <tr class="subtotal"><td>Gross Potential Rent (annual)</td><td class="num">$39,420</td><td class="num">$45,600</td><td class="num">$46,800</td><td></td></tr>
-        <tr><td>Less: Vacancy</td><td class="num">($2,759)</td><td class="num">($3,648)</td><td class="num">($3,276)</td><td>7-8% allowance</td></tr>
-        <tr class="subtotal"><td>Effective Gross Income (EGI)</td><td class="num">$36,661</td><td class="num">$41,952</td><td class="num">$43,524</td><td></td></tr>
-        <tr><td colspan="5" style="background:#0d1117;color:#8b949e;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;padding:8px 12px;">Operating Expenses</td></tr>
-        <tr><td>Property tax</td><td class="num">$8,346</td><td class="num">$12,010</td><td class="num">$12,122</td><td>2.44% × 80% of build</td></tr>
-        <tr><td>Insurance</td><td class="num">$4,276</td><td class="num">$6,151</td><td class="num">$6,209</td><td>1% of build</td></tr>
-        <tr><td>Property management</td><td class="num">$3,942</td><td class="num">$4,560</td><td class="num">$4,680</td><td>10% of GPR</td></tr>
-        <tr><td>Repairs &amp; maintenance</td><td class="num">$2,365</td><td class="num">$2,736</td><td class="num">$2,808</td><td>6% of GPR</td></tr>
-        <tr><td>CapEx reserve</td><td class="num">$1,183</td><td class="num">$1,368</td><td class="num">$1,404</td><td>3% of GPR</td></tr>
-        <tr><td>Leasing / turnover</td><td class="num">$600</td><td class="num">$1,200</td><td class="num">$600</td><td>$600/unit/yr</td></tr>
-        <tr><td>Utilities during vacancy</td><td class="num">$600</td><td class="num">$600</td><td class="num">$600</td><td>$50/mo</td></tr>
-        <tr class="subtotal"><td>Total Operating Expenses</td><td class="num">$21,312</td><td class="num">$28,625</td><td class="num">$28,423</td><td></td></tr>
-        <tr><td>Opex as % of GPR</td><td class="num">54.1%</td><td class="num">62.8%</td><td class="num">60.7%</td><td></td></tr>
-        <tr class="total"><td>NET OPERATING INCOME (NOI)</td><td class="num" style="color:#3fb950">$15,349</td><td class="num" style="color:#3fb950">$13,327</td><td class="num" style="color:#3fb950">$15,101</td><td></td></tr>
-        <tr><td>Cap rate on cost (NOI ÷ build)</td><td class="num bold" style="color:#3fb950">3.59%</td><td class="num" style="color:#f85149">2.17%</td><td class="num">2.43%</td><td>Unlevered yield</td></tr>
+        <tr><td>Monthly rent per unit</td><td class="num">$3,285</td><td class="num">$1,900</td><td class="num">$3,900</td><td class="num">$2,900</td><td>A: 130 Valero; D: premium townhome</td></tr>
+        <tr><td>Units</td><td class="num">1</td><td class="num">2</td><td class="num">1</td><td class="num">2</td><td></td></tr>
+        <tr class="subtotal"><td>Gross Potential Rent (annual)</td><td class="num">$39,420</td><td class="num">$45,600</td><td class="num">$46,800</td><td class="num">$69,600</td><td></td></tr>
+        <tr><td>Less: Vacancy</td><td class="num">($2,759)</td><td class="num">($3,648)</td><td class="num">($3,276)</td><td class="num">($5,568)</td><td>7-8% allowance</td></tr>
+        <tr class="subtotal"><td>Effective Gross Income (EGI)</td><td class="num">$36,661</td><td class="num">$41,952</td><td class="num">$43,524</td><td class="num">$64,032</td><td></td></tr>
+        <tr><td colspan="6" style="background:#0d1117;color:#8b949e;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;padding:8px 12px;">Operating Expenses</td></tr>
+        <tr><td>Property tax</td><td class="num">$8,541</td><td class="num">$12,204</td><td class="num">$12,318</td><td class="num">$18,720</td><td>2.44% × 80% of build</td></tr>
+        <tr><td>Insurance</td><td class="num">$4,376</td><td class="num">$6,251</td><td class="num">$6,309</td><td class="num">$9,590</td><td>1% of build</td></tr>
+        <tr><td>Property management</td><td class="num">$3,942</td><td class="num">$4,560</td><td class="num">$4,680</td><td class="num">$6,960</td><td>10% of GPR</td></tr>
+        <tr><td>Repairs &amp; maintenance</td><td class="num">$2,365</td><td class="num">$2,736</td><td class="num">$2,808</td><td class="num">$4,176</td><td>6% of GPR</td></tr>
+        <tr><td>CapEx reserve</td><td class="num">$1,183</td><td class="num">$1,368</td><td class="num">$1,404</td><td class="num">$2,088</td><td>3% of GPR</td></tr>
+        <tr><td>Leasing / turnover</td><td class="num">$600</td><td class="num">$1,200</td><td class="num">$600</td><td class="num">$1,200</td><td>$600/unit/yr</td></tr>
+        <tr><td>Utilities during vacancy</td><td class="num">$600</td><td class="num">$600</td><td class="num">$600</td><td class="num">$600</td><td>$50/mo</td></tr>
+        <tr class="subtotal"><td>Total Operating Expenses</td><td class="num">$21,607</td><td class="num">$28,919</td><td class="num">$28,719</td><td class="num">$43,334</td><td></td></tr>
+        <tr><td>Opex as % of GPR</td><td class="num">54.8%</td><td class="num">63.4%</td><td class="num">61.4%</td><td class="num">62.3%</td><td></td></tr>
+        <tr class="total"><td>NET OPERATING INCOME (NOI)</td><td class="num" style="color:#3fb950">$15,054</td><td class="num" style="color:#3fb950">$13,033</td><td class="num" style="color:#3fb950">$14,805</td><td class="num" style="color:#3fb950">$20,698</td><td></td></tr>
+        <tr><td>Cap rate on cost (NOI ÷ build)</td><td class="num bold" style="color:#3fb950">3.44%</td><td class="num" style="color:#f85149">2.08%</td><td class="num">2.35%</td><td class="num" style="color:#f85149">2.16%</td><td>Unlevered yield</td></tr>
       </tbody>
     </table>
+    </div>
     <p class="footnote">Property tax dominates opex (21-26% of GPR) — this is structural in Texas and cannot be meaningfully reduced. Insurance, management, maintenance, capex, and vacancy make up the remainder.</p>
   </div>
 
@@ -722,28 +728,10 @@
 
   <div class="card">
     <h2>Levered Returns at Multiple Hold Horizons</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Hold Period</th>
-          <th class="num">Option A: SFR</th>
-          <th class="num">Option B: Duplex</th>
-          <th class="num">Option C: 3-Story</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>5-year IRR (annualized)</td><td class="num" style="color:#d29922">~6.3%</td><td class="num" style="color:#f85149">~0.0%</td><td class="num" style="color:#d29922">~3.8%</td></tr>
-        <tr style="background: rgba(88,166,255,0.08);"><td class="bold">10-year IRR (annualized)</td><td class="num bold" style="color:#3fb950">~8.6%</td><td class="num" style="color:#f85149">~4.5%</td><td class="num" style="color:#d29922">~7.4%</td></tr>
-        <tr><td>15-year IRR (annualized)</td><td class="num" style="color:#3fb950">~9.1%</td><td class="num" style="color:#d29922">~6.2%</td><td class="num" style="color:#3fb950">~8.3%</td></tr>
-        <tr><td>20-year IRR (annualized)</td><td class="num" style="color:#3fb950">~9.4%</td><td class="num" style="color:#d29922">~7.7%</td><td class="num" style="color:#3fb950">~9.0%</td></tr>
-        <tr><td>30-year IRR (annualized, debt paid off)</td><td class="num" style="color:#3fb950">~8.2%</td><td class="num" style="color:#d29922">~6.9%</td><td class="num" style="color:#3fb950">~7.8%</td></tr>
-        <tr class="total"><td>Equity multiple at 10 years</td><td class="num">2.29×</td><td class="num">1.56×</td><td class="num">2.04×</td></tr>
-        <tr class="total"><td>Equity multiple at 20 years</td><td class="num">6.0×</td><td class="num">4.45×</td><td class="num">5.55×</td></tr>
-        <tr class="total"><td>Equity multiple at 30 years</td><td class="num">10.76×</td><td class="num">7.43×</td><td class="num">9.44×</td></tr>
-        <tr class="total"><td>Total wealth at Year 30</td><td class="num">~$920K</td><td class="num">~$925K</td><td class="num">~$1,172K</td></tr>
-      </tbody>
-    </table>
-    <p class="footnote">IRR approximation: ((net sale proceeds + cumulative ATCF) / initial equity)^(1/hold years) − 1. Treats all cash flow as received at exit. Full Excel model computes more precise IRRs using the ATCF column in the 30-year pro forma.</p>
+    <div style="overflow-x:auto;">
+    <table style="min-width: 900px;" id="irrTable"></table>
+    </div>
+    <p class="footnote">IRR approximation: ((net sale proceeds + cumulative ATCF) / initial equity)^(1/hold years) − 1. Populated dynamically from the 30-year pro forma for all 4 scenarios. Change any input on the Assumptions tab of the Excel model to see effects propagate.</p>
   </div>
 
   <div class="grid-2">
@@ -1413,6 +1401,59 @@ document.getElementById('sensTable2').innerHTML = sensHTML2;
 
 // Populate dynamic Summary comparison
 populateSummaryTable();
+
+// Populate IRR table
+function populateIrrTable() {
+  const tbl = document.getElementById('irrTable');
+  if (!tbl) return;
+  const scenarios = [
+    { key: 'A', scen: scenA, label: 'A: SFR' },
+    { key: 'B', scen: scenB, label: 'B: Duplex' },
+    { key: 'C', scen: scenC, label: 'C: 3-Story' },
+    { key: 'D', scen: scenD, label: 'D: Premium Duplex' }
+  ];
+  const horizons = [5, 10, 15, 20, 25, 30];
+  let html = '<thead><tr><th>Hold Period</th>';
+  scenarios.forEach(s => { html += `<th class="num">${s.label}</th>`; });
+  html += '</tr></thead><tbody>';
+
+  horizons.forEach(yrs => {
+    const hilite = yrs === 10 ? ' style="background: rgba(88,166,255,0.08);"' : '';
+    const boldClass = yrs === 10 ? 'bold' : '';
+    html += `<tr${hilite}><td class="${boldClass}">${yrs}-year IRR</td>`;
+    const values = scenarios.map(s => approxIRR(s.scen, yrs));
+    values.forEach(v => {
+      let color = '#f85149';
+      if (v > 0.08) color = '#3fb950';
+      else if (v > 0.04) color = '#d29922';
+      html += `<td class="num ${boldClass}" style="color:${color}">${(v*100).toFixed(1)}%</td>`;
+    });
+    html += '</tr>';
+  });
+
+  // Equity multiples
+  [10, 20, 30].forEach(yrs => {
+    html += `<tr class="total"><td>Equity multiple at ${yrs} years</td>`;
+    scenarios.forEach(s => {
+      const r = s.scen.results[yrs - 1];
+      const netSale = r.propertyValue * 0.93 - r.loanBalance;
+      const mult = (netSale + r.cumATCF) / s.scen.equity;
+      html += `<td class="num">${mult.toFixed(2)}×</td>`;
+    });
+    html += '</tr>';
+  });
+
+  // Wealth at Yr 30
+  html += `<tr class="total"><td>Total wealth at Year 30</td>`;
+  scenarios.forEach(s => {
+    const r = s.scen.results[29];
+    const wealth = r.equityValue - s.scen.equity + r.cumATCF;
+    html += `<td class="num">$${Math.round(wealth/1000)}K</td>`;
+  });
+  html += '</tr></tbody>';
+  tbl.innerHTML = html;
+}
+populateIrrTable();
 
 </script>
 </body>
