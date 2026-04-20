@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valero St Development Analysis — Hold / Flip</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0d1117; color: #c9d1d9; line-height: 1.5; padding: 24px;
+  }
+  .container { max-width: 1400px; margin: 0 auto; }
+  header {
+    background: linear-gradient(135deg, #1a2332 0%, #0d1a2d 100%);
+    border: 1px solid #30363d; border-radius: 10px; padding: 28px; margin-bottom: 20px;
+  }
+  header h1 { font-size: 28px; color: #f0f6fc; margin-bottom: 6px; font-weight: 600; }
+  header .subtitle { color: #8b949e; font-size: 14px; }
+  header .meta { margin-top: 12px; display: flex; gap: 20px; flex-wrap: wrap; font-size: 12px; color: #58a6ff; }
+  .tabs {
+    display: flex; gap: 2px; margin-bottom: 20px; background: #161b22;
+    border: 1px solid #30363d; border-radius: 8px; padding: 4px; overflow-x: auto;
+  }
+  .tab {
+    padding: 10px 18px; cursor: pointer; font-size: 13px; color: #8b949e;
+    border-radius: 6px; white-space: nowrap; transition: all 0.15s; font-weight: 500;
+  }
+  .tab:hover { color: #c9d1d9; background: #21262d; }
+  .tab.active { background: #1f6feb; color: #fff; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .card {
+    background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+    padding: 24px; margin-bottom: 20px;
+  }
+  .card h2 {
+    font-size: 18px; color: #f0f6fc; margin-bottom: 16px; font-weight: 600;
+  }
+  .card h3 { font-size: 15px; color: #f0f6fc; margin: 18px 0 10px; font-weight: 600; }
+  .card p { margin-bottom: 10px; color: #c9d1d9; font-size: 14px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  @media (max-width: 900px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+  .kpi {
+    background: #0d1117; border: 1px solid #30363d; border-radius: 8px;
+    padding: 14px; text-align: center;
+  }
+  .kpi .label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+  .kpi .value { font-size: 22px; font-weight: 600; color: #f0f6fc; }
+  .kpi .unit { font-size: 11px; color: #8b949e; margin-top: 2px; }
+  .kpi.positive .value { color: #3fb950; }
+  .kpi.negative .value { color: #f85149; }
+  .kpi.warning .value { color: #d29922; }
+  .kpi.info .value { color: #58a6ff; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; background: #0d1117; color: #8b949e;
+    font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.3px;
+    border-bottom: 1px solid #30363d; }
+  td { padding: 10px 12px; border-bottom: 1px solid #21262d; color: #c9d1d9; }
+  tr:hover td { background: #0d1117; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.bold { font-weight: 600; color: #f0f6fc; }
+  tr.total td { background: #0d1117; font-weight: 600; color: #f0f6fc; border-top: 2px solid #30363d; }
+  tr.subtotal td { background: #161b22; font-weight: 600; color: #f0f6fc; }
+  tr.winner td { background: rgba(63,185,80,0.08); }
+
+  .recommendation-banner {
+    background: linear-gradient(135deg, #0e4429 0%, #133d26 100%);
+    border: 2px solid #3fb950; border-radius: 10px; padding: 24px; margin-bottom: 20px;
+  }
+  .recommendation-banner .label { color: #3fb950; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.5px; font-weight: 600; margin-bottom: 8px; }
+  .recommendation-banner h2 { color: #f0f6fc; font-size: 22px; margin-bottom: 8px; }
+  .recommendation-banner .summary { color: #c9d1d9; font-size: 14px; line-height: 1.6; }
+
+  .risk-banner {
+    background: linear-gradient(135deg, #3d1e1e 0%, #2d1515 100%);
+    border: 1px solid #f85149; border-radius: 8px; padding: 16px; margin-bottom: 18px;
+  }
+  .risk-banner .title { color: #f85149; font-weight: 600; font-size: 13px; margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.3px; }
+
+  .warning-banner {
+    background: linear-gradient(135deg, #3d2e0e 0%, #2d2109 100%);
+    border: 1px solid #d29922; border-radius: 8px; padding: 16px; margin-bottom: 18px;
+  }
+  .warning-banner .title { color: #d29922; font-weight: 600; font-size: 13px; margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.3px; }
+
+  .info-box {
+    background: #0d1f3d; border: 1px solid #1f6feb; border-radius: 8px;
+    padding: 14px; margin: 12px 0; font-size: 13px;
+  }
+  .info-box strong { color: #58a6ff; }
+
+  .pill {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: 600; margin-left: 8px;
+  }
+  .pill.a { background: #0d1f3d; color: #58a6ff; border: 1px solid #1f6feb; }
+  .pill.b { background: #3d2e0e; color: #d29922; border: 1px solid #d29922; }
+  .pill.c { background: #2e0e3d; color: #a371f7; border: 1px solid #a371f7; }
+  .pill.green { background: #0e4429; color: #3fb950; border: 1px solid #3fb950; }
+  .pill.red { background: #3d1e1e; color: #f85149; border: 1px solid #f85149; }
+
+  .chart-container { position: relative; height: 320px; margin-top: 10px; }
+  .chart-container-tall { position: relative; height: 420px; margin-top: 10px; }
+  .chart-container-xl { position: relative; height: 480px; margin-top: 10px; }
+
+  ul.clean { list-style: none; }
+  ul.clean li { padding: 6px 0; padding-left: 18px; position: relative; font-size: 14px; }
+  ul.clean li::before { content: "▸"; position: absolute; left: 0; color: #58a6ff; }
+  ul.check li::before { content: "✓"; color: #3fb950; font-weight: bold; }
+  ul.x li::before { content: "✗"; color: #f85149; font-weight: bold; }
+
+  .comp-link { color: #58a6ff; text-decoration: none; }
+  .comp-link:hover { text-decoration: underline; }
+
+  .footnote { font-size: 11px; color: #6e7681; margin-top: 8px; font-style: italic; }
+
+  .return-stack {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    background: #0d1117; padding: 16px; border-radius: 8px; border: 1px solid #30363d;
+  }
+  .return-stack .component {
+    text-align: center; padding: 10px; border-radius: 6px;
+  }
+  .return-stack .component.cf { background: rgba(248,81,73,0.10); border: 1px solid rgba(248,81,73,0.3); }
+  .return-stack .component.pp { background: rgba(88,166,255,0.10); border: 1px solid rgba(88,166,255,0.3); }
+  .return-stack .component.ap { background: rgba(63,185,80,0.10); border: 1px solid rgba(63,185,80,0.3); }
+  .return-stack .component.tx { background: rgba(210,153,34,0.10); border: 1px solid rgba(210,153,34,0.3); }
+  .return-stack .label { font-size: 10px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .return-stack .value { font-size: 18px; font-weight: 600; }
+  .return-stack .sub { font-size: 10px; color: #8b949e; margin-top: 2px; }
+
+  .mode-toggle {
+    display: flex; gap: 4px; margin-bottom: 16px; background: #161b22;
+    border: 1px solid #30363d; border-radius: 10px; padding: 6px; width: fit-content;
+  }
+  .mode-btn {
+    padding: 10px 22px; cursor: pointer; font-size: 13px; font-weight: 600;
+    color: #8b949e; background: transparent; border: none; border-radius: 6px;
+    transition: all 0.15s; font-family: inherit;
+  }
+  .mode-btn:hover { color: #c9d1d9; background: #21262d; }
+  .mode-btn.active.hold { background: #1f6feb; color: #fff; }
+  .mode-btn.active.flip { background: #a371f7; color: #fff; }
+
+  .mode-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: 700; margin-left: 10px; vertical-align: middle;
+  }
+  .mode-badge.hold { background: #0d1f3d; color: #58a6ff; border: 1px solid #1f6feb; }
+  .mode-badge.flip { background: #2e0e3d; color: #a371f7; border: 1px solid #a371f7; }
+
+  .hold-only { display: block; }
+  .flip-only { display: none; }
+  body.flip-mode .hold-only { display: none; }
+  body.flip-mode .flip-only { display: block; }
+  body.flip-mode .recommendation-banner { background: linear-gradient(135deg, #2e0e3d 0%, #1d0628 100%); border-color: #a371f7; }
+  body.flip-mode .recommendation-banner .label { color: #a371f7; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Valero St Development Analysis
+    <span class="mode-badge hold hold-only">HOLD</span>
+    <span class="mode-badge flip flip-only">FLIP</span>
+  </h1>
+  <div class="subtitle">Vacant lot (~5,096 sf) behind 703 E. Ashby · Tobin Hill, San Antonio TX 78212 · NOT in Historic District</div>
+  <div class="meta">
+    <span class="hold-only">Buy-and-Hold Rental Strategy (30-Year)</span>
+    <span class="flip-only">Spec Build &amp; Flip Strategy (~15-Month Cycle)</span>
+    <span>80% Debt Financing</span>
+    <span>3 Scenarios: SFR · Duplex · 3-Story SFR</span>
+    <span>Sewer lateral to Ashby included</span>
+  </div>
+</header>
+
+<div class="mode-toggle">
+  <button class="mode-btn hold active" data-mode="hold" onclick="switchMode('hold')">HOLD · 30-Yr Rental</button>
+  <button class="mode-btn flip" data-mode="flip" onclick="switchMode('flip')">FLIP · Spec Sale</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(event, 'summary')">Summary</div>
+  <div class="tab" onclick="switchTab(event, 'site')">Site &amp; Zoning</div>
+  <div class="tab" onclick="switchTab(event, 'comps')">Comps</div>
+  <div class="tab" onclick="switchTab(event, 'costs')">Construction</div>
+  <div class="tab" onclick="switchTab(event, 'revenue')">Yr-1 Pro Forma</div>
+  <div class="tab" onclick="switchTab(event, 'hold')">30-Yr Hold</div>
+  <div class="tab" onclick="switchTab(event, 'returns')">Total Returns</div>
+  <div class="tab" onclick="switchTab(event, 'sensitivity')">Sensitivity</div>
+  <div class="tab" onclick="switchTab(event, 'recommendation')">Recommendation</div>
+</div>
+
+<!-- ================ SUMMARY ================ -->
+<div id="summary" class="panel active">
+  <div class="recommendation-banner hold-only">
+    <div class="label">Recommendation — Hold Strategy</div>
+    <h2>Build Option A: 1,700 sf 3BR/2BA 2-Story Modern SFR (Replicate 130 Valero)</h2>
+    <div class="summary">
+      For a buy-and-hold rental strategy, <strong>Option A is the capital-efficient winner</strong>: smallest build cost ($438K including Ashby sewer lateral), best unlevered yield (3.5%), strongest direct rent comp (130 Valero at $3,285/mo Zestimate), and by-right zoning. Year-1 pre-tax cash flow is <strong>negative ~$12K</strong> (structural at today's 7% rates), but after the <strong>depreciation tax shield (+$7K/yr)</strong>, <strong>principal paydown (+$3.5K)</strong>, and <strong>appreciation (+$13K)</strong>, Year-1 total return on $88K equity is <strong>~13%</strong>. Cross-over to positive cash flow by Year 4-5 as rents grow faster than the fixed debt service. <strong>10-year IRR: ~8.5% · 20-year IRR: ~9.3% · 30-year: ~8.2%</strong> with 10.5× equity multiple at paid-off exit.
+    </div>
+  </div>
+
+  <div class="recommendation-banner flip-only">
+    <div class="label">Recommendation — Flip Strategy</div>
+    <h2>Caution: Flip economics are marginal at current Tobin Hill comp pricing</h2>
+    <div class="summary">
+      For a spec-build-and-flip strategy, the base case is <strong>marginal at best</strong>. Option A (1,700 sf SFR) builds for ~$438K all-in; Tobin Hill resale comps (130 Valero at $227/sf, 710 E. Ashby at $222/sf, 138 Valero at $248/sf reno) suggest $240-$260/sf is a realistic exit — giving a $470K sale, $437K net of 7% sales costs, essentially <strong>break-even to small profit</strong>. Only works if you can push finishes to Terramark quality ($290-$310/sf) to target an owner-occupant buyer, which delivers <strong>$35-70K net profit (40-80% ROE on ~15-month cycle)</strong>. The duplex loses money on flip; 3-story SFR is marginal. <strong>HOLD is the stronger strategy for this lot given current rent strength and weak sale comps.</strong>
+    </div>
+  </div>
+
+  <div class="hold-only">
+    <h3 style="margin:18px 0 12px; color:#f0f6fc; font-size:15px;">Key Hold Metrics at a Glance (Option A)</h3>
+    <div class="grid-4">
+      <div class="kpi info"><div class="label">Equity Required</div><div class="value">$87.7K</div><div class="unit">20% of $438K build</div></div>
+      <div class="kpi info"><div class="label">Year-1 NOI</div><div class="value">$15.1K</div><div class="unit">3.45% cap on cost</div></div>
+      <div class="kpi negative"><div class="label">Year-1 Pre-Tax CF</div><div class="value">−$12.7K</div><div class="unit">Expected at 7% rates</div></div>
+      <div class="kpi positive"><div class="label">Year-1 Total Return</div><div class="value">+12.6%</div><div class="unit">ATCF + paydown + appreciation</div></div>
+    </div>
+    <div class="grid-4" style="margin-top:14px">
+      <div class="kpi positive"><div class="label">10-Yr IRR (levered)</div><div class="value">~8.5%</div><div class="unit">2.26× equity multiple</div></div>
+      <div class="kpi positive"><div class="label">20-Yr IRR (levered)</div><div class="value">~9.3%</div><div class="unit">5.9× equity multiple</div></div>
+      <div class="kpi positive"><div class="label">30-Yr Total Return</div><div class="value">~$920K</div><div class="unit">10.5× initial equity</div></div>
+      <div class="kpi positive"><div class="label">Entitlement Risk</div><div class="value">Low</div><div class="unit">By-right, no HDRC</div></div>
+    </div>
+  </div>
+
+  <div class="flip-only">
+    <h3 style="margin:18px 0 12px; color:#f0f6fc; font-size:15px;">Key Flip Metrics at a Glance (Option A)</h3>
+    <div class="grid-4">
+      <div class="kpi info"><div class="label">Equity Required</div><div class="value">$87.7K</div><div class="unit">20% of $438K build</div></div>
+      <div class="kpi warning"><div class="label">Exit @ $250/sf (conservative)</div><div class="value">$425K</div><div class="unit">Tobin Hill avg resale</div></div>
+      <div class="kpi info"><div class="label">Exit @ $275/sf (base)</div><div class="value">$467K</div><div class="unit">Modern finish premium</div></div>
+      <div class="kpi positive"><div class="label">Exit @ $300/sf (upside)</div><div class="value">$510K</div><div class="unit">Terramark-tier finishes</div></div>
+    </div>
+    <div class="grid-4" style="margin-top:14px">
+      <div class="kpi negative"><div class="label">Net Profit @ $250/sf</div><div class="value">−$42K</div><div class="unit">Loss scenario</div></div>
+      <div class="kpi warning"><div class="label">Net Profit @ $275/sf</div><div class="value">$0K</div><div class="unit">Break-even</div></div>
+      <div class="kpi positive"><div class="label">Net Profit @ $300/sf</div><div class="value">$36K</div><div class="unit">41% ROE, 15-mo cycle</div></div>
+      <div class="kpi positive"><div class="label">Net Profit @ $325/sf</div><div class="value">$78K</div><div class="unit">89% ROE, 15-mo cycle</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Side-by-Side Scenario Comparison (10-Year Hold)</h2>
+    <div style="overflow-x: auto;">
+    <table style="min-width: 900px;">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th class="num">A: SFR <span class="pill a">1,700 sf</span></th>
+          <th class="num">B: Basic Duplex <span class="pill b">2× 1,000</span></th>
+          <th class="num">C: 3-Story SFR <span class="pill c">2,000 sf</span></th>
+          <th class="num">D: Premium Duplex <span class="pill b">2× 1,500 + rooftop</span></th>
+        </tr>
+      </thead>
+      <tbody id="summaryTable"></tbody>
+    </table>
+    </div>
+    <p class="footnote">IRR approximation: ((cumulative ATCF + net sale proceeds) / initial equity)^(1/hold years) − 1. Treats all cash flow as received at exit; true IRR would be ~50-100 bps higher. Build costs include ~$10K Ashby-side sewer lateral across the lot.</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h2>Why Option A Wins on Efficiency</h2>
+      <ul class="clean check">
+        <li><strong>Highest unlevered yield:</strong> 3.6% vs 2.1% (duplex) and 2.4% (3-story). This is the single most important metric for a leveraged hold.</li>
+        <li><strong>Lowest capital requirement:</strong> $86K equity vs $124-125K. More capital efficient; can diversify elsewhere.</li>
+        <li><strong>Strongest direct comp:</strong> 130 Valero is a 2020-built 3/2 two-story modern on the same block currently renting at $3,285/mo — this is as close to signed lease data as you can get without actually signing a lease.</li>
+        <li><strong>By-right zoning:</strong> 4-6 week plan review, no HDRC, no rezone. Fastest path to rent-producing asset.</li>
+        <li><strong>Simplest operational profile:</strong> One tenant, one lease, one turnover cycle — vs two units in a duplex.</li>
+        <li><strong>Best cross-over timeline:</strong> ATCF crosses positive earliest (~Yr 4-5) because of highest unlevered yield.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>When Option C (3-Story) Beats Option A</h2>
+      <p>Option C produces more <strong>absolute wealth</strong> ($1.17M vs $920K at Yr 30) because the bigger building appreciates in bigger dollars. But it does so at a <strong>lower rate of return</strong> (7.4% vs 8.6% 10-yr IRR).</p>
+      <p>Choose Option C if you:</p>
+      <ul class="clean">
+        <li>Have excess capital to deploy and can absorb more negative cash flow in early years</li>
+        <li>Prefer a differentiated/premium product (3-story townhome-style stands out in Tobin Hill)</li>
+        <li>Want a long-duration (20-30 year) wealth-building vehicle at max scale on the lot</li>
+        <li>Plan to own-occupy someday (walkable downtown, covered garage, modern finishes)</li>
+      </ul>
+      <p>Choose Option A if you want the highest % return per dollar invested and the cleanest financing path.</p>
+    </div>
+  </div>
+
+  <div class="risk-banner">
+    <div class="title">Option B (Duplex) — Avoid Under Current Conditions</div>
+    <p style="font-size:13px;color:#c9d1d9;margin-top:4px;">
+      Duplex fails on all three axes for a hold investor: <strong>(1) lowest unlevered yield (2.1%)</strong> — essentially the worst version of negative leverage, <strong>(2) requires rezoning</strong> (6-12 months + denial risk + $45-55K in delay costs), <strong>(3) weakest appreciation driver</strong> (duplex sale comps in Tobin Hill are thin; SFR comps are abundant). Revisit in 2027-2028 if San Antonio passes missing-middle reform OR if rates fall below 5%.
+    </p>
+  </div>
+</div>
+
+<!-- ================ SITE & ZONING ================ -->
+<div id="site" class="panel">
+  <div class="card">
+    <h2>Subject Property</h2>
+    <div class="grid-2">
+      <div>
+        <h3>Location</h3>
+        <p>Vacant infill lot between <strong>118 Valero St</strong> and <strong>126 Valero St</strong>, San Antonio, TX <strong>78212</strong> — <strong>Tobin Hill neighborhood</strong>. Rear lot line shares the northern boundary of <strong>703 E. Ashby Pl</strong> (owner's existing rental). Standard pre-1940 Tobin Hill block structure.</p>
+        <h3>Neighborhood Context</h3>
+        <p>Near-downtown urban neighborhood (&lt;1 mile) adjacent to the <strong>Pearl District</strong>, San Antonio College, and the St. Mary's/McCullough corridor. Strong appreciation trajectory driven by young professional in-migration. New-build SFR comps (130 Valero, Park Place at Tobin Hill, Terramark East Village) establish product-market fit for modern infill.</p>
+      </div>
+      <div>
+        <h3>Lot Details</h3>
+        <table>
+          <tr><th>Metric</th><th class="num">Value</th></tr>
+          <tr><td>Lot area</td><td class="num">~5,096 sqft (per owner)</td></tr>
+          <tr><td>Matches 703 E. Ashby parcel</td><td class="num">Confirmed</td></tr>
+          <tr><td>Est. width (on Valero)</td><td class="num">~45-50 ft</td></tr>
+          <tr><td>Est. depth</td><td class="num">~100-110 ft</td></tr>
+          <tr><td>Existing structure</td><td class="num">None (vacant)</td></tr>
+          <tr><td>Historic district?</td><td class="num" style="color:#3fb950">NO</td></tr>
+          <tr><td>Tree cover</td><td class="num">Heavy (clearing required)</td></tr>
+        </table>
+        <p class="footnote">Dimensions per owner. Pending BCAD verification for legal description and exact dimensions.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Zoning Permissibility Matrix</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Product Type</th>
+          <th>By-Right?</th>
+          <th>Pathway If Not</th>
+          <th>Entitlement Time</th>
+          <th>Risk</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">Option A: 3/2 SFR (1,700 sf, 2-story)</td>
+          <td><span class="pill green">YES — R-4/R-5</span></td>
+          <td>N/A</td>
+          <td>2-3 months</td>
+          <td>Low</td>
+        </tr>
+        <tr>
+          <td class="bold">Option C: 3-story SFR (2,000 sf w/ garage)</td>
+          <td><span class="pill green">YES — max height 35 ft</span></td>
+          <td>N/A</td>
+          <td>3-4 months</td>
+          <td>Low</td>
+        </tr>
+        <tr>
+          <td class="bold">Option B: Duplex (side-by-side)</td>
+          <td><span class="pill red">NO</span></td>
+          <td>Rezone to RM-4 or pursue IDZ overlay</td>
+          <td>+6-12 months beyond permit</td>
+          <td>HIGH — denial possible</td>
+        </tr>
+        <tr>
+          <td class="bold">SFR + Detached ADU (≤800 sqft)</td>
+          <td><span class="pill green">YES — § 35-371</span></td>
+          <td>N/A</td>
+          <td>3-4 months (two structures)</td>
+          <td>Low — but owner-occupancy required for one unit</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="footnote">Source: SA Unified Development Code § 35-310.05 (R-4/5/6), § 35-310.06 (RM-4), § 35-341 (IDZ), § 35-371 (ADU). Missing-middle reform under study by NHSD (Feb 2026) but no draft legislation yet — 12-24 month timeline at minimum.</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="card" style="border-color: #3fb950;">
+      <h2 style="color: #3fb950;">✓ Non-Historic = Major Advantage</h2>
+      <p>Owner confirmed the lot sits <strong>outside</strong> the Tobin Hill Historic District overlay, which means:</p>
+      <ul class="clean check">
+        <li>No HDRC Certificate of Appropriateness</li>
+        <li>No mandatory design review (saves 3-6 months)</li>
+        <li>No material premiums for historic compliance</li>
+        <li>Freedom for modern 2-story / 3-story design (130 Valero is 2-story modern)</li>
+        <li>Standard lot coverage (no 50% cap)</li>
+        <li>No OHP foundation inspection hold</li>
+        <li>Standard DSD plan review only — ~4-6 weeks</li>
+      </ul>
+      <p><strong>Total non-historic advantage: ~$40K cost savings + 3-6 months faster to cash flow.</strong></p>
+    </div>
+    <div class="card">
+      <h2>SAWS Impact Fees &amp; Utilities</h2>
+      <table>
+        <tr><th>Scenario</th><th class="num">Combined Impact Fee</th></tr>
+        <tr><td>SFR (single 5/8" meter)</td><td class="num">$7,343 – $8,500</td></tr>
+        <tr><td>Duplex (two separate meters)</td><td class="num">$14,700 – $17,000</td></tr>
+        <tr><td>3-story SFR (single meter)</td><td class="num">$7,343 – $8,500</td></tr>
+      </table>
+      <h3>Other Utility Costs</h3>
+      <ul class="clean">
+        <li>SAWS water tap + meter set: $1,500 – $4,000</li>
+        <li>SAWS sewer tap: $1,500 – $4,000</li>
+        <li>CPS electric service drop: often free</li>
+        <li>CPS gas tap: $350 – $2,000 (skip if all-electric)</li>
+      </ul>
+      <div class="info-box">
+        <strong>Good news:</strong> Tobin Hill has mature pre-1940 infrastructure. Water/sewer stubs almost certainly exist at the lot line — confirm with a <strong>SAWS service availability letter</strong> before underwriting.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================ COMPS ================ -->
+<div id="comps" class="panel">
+  <div class="card">
+    <h2>Direct Rent Comp — 130 Valero St</h2>
+    <div class="info-box">
+      <strong>130 Valero</strong> is the single most important data point in this analysis. It's a 2020-built 3BR/2BA two-story modern infill home on the same block as the subject lot. <strong>Current rent Zestimate: $3,285/mo</strong> ($1.93/sf on 1,701 sf). This establishes the rent ceiling for a new-build 3/2 SFR on Valero St and drives the Option A revenue model directly. Our recommended build replicates this product.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Valero Street Sale Comparables</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Address</th>
+          <th>Type</th>
+          <th>Beds/Baths</th>
+          <th class="num">SqFt</th>
+          <th>Year Built</th>
+          <th class="num">Price / Value</th>
+          <th class="num">$/sf</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background: rgba(88,166,255,0.08);">
+          <td class="bold"><a href="https://www.zillow.com/homedetails/130-Valero-St-San-Antonio-TX-78212/2080546217_zpid/" class="comp-link" target="_blank">130 Valero St</a></td>
+          <td>SFR</td>
+          <td>3/2</td>
+          <td class="num">1,701</td>
+          <td>2020</td>
+          <td class="num">$386-390K (Zest.)</td>
+          <td class="num">$227</td>
+          <td><strong>Gold comp.</strong> Rent Zestimate $3,285/mo</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.redfin.com/TX/San-Antonio/138-Valero-St-78212/home/48746998" class="comp-link" target="_blank">138 Valero St</a></td>
+          <td>SFR</td>
+          <td>3/2</td>
+          <td class="num">1,708</td>
+          <td>1932 (reno)</td>
+          <td class="num">$425K active</td>
+          <td class="num">$248</td>
+          <td>Renovated historic bungalow</td>
+        </tr>
+        <tr>
+          <td>134 Valero St</td>
+          <td>SFR</td>
+          <td>3/1</td>
+          <td class="num">1,598</td>
+          <td>1932</td>
+          <td class="num">$150K (2009)</td>
+          <td class="num">$94</td>
+          <td>Pre-boom basis</td>
+        </tr>
+        <tr>
+          <td>104 Valero St</td>
+          <td><span class="pill b">Duplex</span></td>
+          <td>1/1 × 2</td>
+          <td class="num">1,440</td>
+          <td>1946</td>
+          <td class="num">$135K (2013)</td>
+          <td class="num">$94</td>
+          <td>Grandfathered duplex — precedent but not buildable today</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>E. Ashby &amp; Nearby Sale Comps</h2>
+    <table>
+      <thead>
+        <tr><th>Address</th><th>Beds/Baths</th><th class="num">SqFt</th><th>Sale</th><th class="num">Price</th><th class="num">$/sf</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><a href="https://www.redfin.com/TX/San-Antonio/710-E-Ashby-Pl-78212/home/48852073" class="comp-link" target="_blank">710 E Ashby Pl</a></td><td>3/2</td><td class="num">1,573</td><td>Dec 2024</td><td class="num">$350,000</td><td class="num">$222</td></tr>
+        <tr><td>805 E Ashby Pl</td><td>3/2</td><td class="num">1,850</td><td>2024</td><td class="num">~$450K</td><td class="num">~$243</td></tr>
+        <tr><td>726 E Ashby Pl</td><td>3/1</td><td class="num">1,268</td><td>Recent</td><td class="num">$250-285K</td><td class="num">$197-$225</td></tr>
+        <tr><td>Park Place at Tobin Hill (Beazer)</td><td>Various</td><td class="num">—</td><td>Recent</td><td class="num">from $499,990</td><td class="num">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h2>Rent Comps</h2>
+      <table>
+        <tr><th>Property</th><th class="num">Monthly Rent</th></tr>
+        <tr style="background: rgba(88,166,255,0.08);"><td class="bold">130 Valero (2020 new-build 3/2)</td><td class="num bold">$3,285</td></tr>
+        <tr><td>703 E Ashby Pl (your rental, older stock)</td><td class="num">$1,800</td></tr>
+        <tr><td>118 Valero (1939, 2/1, 1,012 sf)</td><td class="num">$1,900</td></tr>
+        <tr><td>126 Valero</td><td class="num">$1,200</td></tr>
+        <tr><td>Tobin Hill 3BR avg (Rentcast)</td><td class="num">$1,870 - $2,000</td></tr>
+        <tr><td>Modern 2/2 duplex unit (Dignowity)</td><td class="num">$1,550 - $1,650</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Market Trend Context</h2>
+      <ul class="clean">
+        <li>Tobin Hill median sale peak <strong>Jun 2025: $419K</strong></li>
+        <li>Tobin Hill median sale <strong>Mar 2026: $316K</strong> (softening from peak)</li>
+        <li>Avg list $/sf (current inventory): <strong>$252</strong></li>
+        <li>2026 price forecast: modest ~3% appreciation</li>
+        <li>SFR rental vacancy: <strong>7.2%</strong> (apartment vacancy 15.7% — not comparable)</li>
+        <li>Rent growth: tracking 3-4%/yr nominal in near-downtown SA</li>
+      </ul>
+      <div class="info-box">
+        Use <strong>3% annual rent growth</strong> as the base assumption (conservative). New construction with premium finishes should track at the upper end or slightly above the older stock price index.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================ CONSTRUCTION COSTS ================ -->
+<div id="costs" class="panel">
+  <div class="card">
+    <h2>Construction Cost Buildup — 3 Scenarios</h2>
+    <p>Non-historic district status eliminates the 10-15% historic premium. Numbers below reflect mid-grade finishes (LVP, quartz, builder-grade appliances) with Hardie siding (still recommended for durability in SA climate).</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Line Item</th>
+          <th class="num">Option A: SFR<br>1,700 sf, 2-story</th>
+          <th class="num">Option B: Duplex<br>2,000 sf, side-by-side</th>
+          <th class="num">Option C: 3-Story SFR<br>2,000 sf w/ garage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Hard cost base (sqft × $/sf)</td><td class="num">$314,500 ($185)</td><td class="num">$420,000 ($210)</td><td class="num">$450,000 ($225)</td></tr>
+        <tr><td>Site prep / tree clearing</td><td class="num">$8,000</td><td class="num">$10,000</td><td class="num">$10,000</td></tr>
+        <tr><td>Utility tie-ins</td><td class="num">$10,000</td><td class="num">$18,000</td><td class="num">$12,000</td></tr>
+        <tr><td>SAWS impact fees</td><td class="num">$8,000</td><td class="num">$15,500</td><td class="num">$8,000</td></tr>
+        <tr><td>City permits + plan review</td><td class="num">$4,500</td><td class="num">$7,000</td><td class="num">$5,500</td></tr>
+        <tr><td>Architect (8-9% of hard)</td><td class="num">$25,160</td><td class="num">$33,600</td><td class="num">$40,500</td></tr>
+        <tr><td>Engineering (structural + civil)</td><td class="num">$5,000</td><td class="num">$8,000</td><td class="num">$8,500</td></tr>
+        <tr><td>Survey + geotech</td><td class="num">$3,500</td><td class="num">$4,500</td><td class="num">$4,000</td></tr>
+        <tr><td>Builder's risk insurance</td><td class="num">$5,000</td><td class="num">$7,500</td><td class="num">$7,000</td></tr>
+        <tr><td>Property tax during construction</td><td class="num">$1,500</td><td class="num">$2,500</td><td class="num">$2,000</td></tr>
+        <tr><td>Rezoning / IDZ application</td><td class="num" style="color:#3fb950">$0</td><td class="num" style="color:#f85149">$15,000</td><td class="num" style="color:#3fb950">$0</td></tr>
+        <tr><td>Contingency (8-10% of hard)</td><td class="num">$25,160</td><td class="num">$42,000</td><td class="num">$45,000</td></tr>
+        <tr class="subtotal"><td>Subtotal (pre-financing)</td><td class="num">$410,320</td><td class="num">$583,600</td><td class="num">$592,500</td></tr>
+        <tr><td>Construction loan interest (7.5%)</td><td class="num">$12,310</td><td class="num">$24,500</td><td class="num">$21,325</td></tr>
+        <tr><td>Loan origination + closing (1.5%)</td><td class="num">$4,924</td><td class="num">$7,003</td><td class="num">$7,110</td></tr>
+        <tr class="total"><td>TOTAL ALL-IN DEVELOPMENT COST</td><td class="num">$427,554</td><td class="num">$615,103</td><td class="num">$620,935</td></tr>
+        <tr><td>Per sqft (all-in)</td><td class="num">$251</td><td class="num">$308</td><td class="num">$310</td></tr>
+        <tr><td>Equity required (20%)</td><td class="num bold">$85,511</td><td class="num bold">$123,021</td><td class="num bold">$124,187</td></tr>
+        <tr><td>Permanent loan (80%)</td><td class="num">$342,043</td><td class="num">$492,082</td><td class="num">$496,748</td></tr>
+      </tbody>
+    </table>
+    <p class="footnote">Numbers match the Excel model (Valero Rental Hold ROI Model.xlsx — Cost Buildup tab). Change any input on the Assumptions tab to see all downstream effects.</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h2>Cost Breakdown Visualization</h2>
+      <div class="chart-container"><canvas id="costStackChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>$/sqft Comparison</h2>
+      <div class="chart-container"><canvas id="psfChart"></canvas></div>
+      <p class="footnote">Option A at $251/sf all-in is dramatically more efficient than the duplex ($308/sf) or 3-story ($310/sf). Duplex inefficiency comes from dual-unit premium + rezoning; 3-story from structural complexity.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ YEAR-1 PRO FORMA ================ -->
+<div id="revenue" class="panel">
+  <div class="card">
+    <h2>Year-1 Revenue &amp; Operating Pro Forma</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Line Item</th>
+          <th class="num">Option A: SFR</th>
+          <th class="num">Option B: Duplex</th>
+          <th class="num">Option C: 3-Story</th>
+          <th>Basis</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Monthly rent per unit</td><td class="num">$3,285</td><td class="num">$1,900</td><td class="num">$3,900</td><td>130 Valero / market new-build</td></tr>
+        <tr><td>Units</td><td class="num">1</td><td class="num">2</td><td class="num">1</td><td></td></tr>
+        <tr class="subtotal"><td>Gross Potential Rent (annual)</td><td class="num">$39,420</td><td class="num">$45,600</td><td class="num">$46,800</td><td></td></tr>
+        <tr><td>Less: Vacancy</td><td class="num">($2,759)</td><td class="num">($3,648)</td><td class="num">($3,276)</td><td>7-8% allowance</td></tr>
+        <tr class="subtotal"><td>Effective Gross Income (EGI)</td><td class="num">$36,661</td><td class="num">$41,952</td><td class="num">$43,524</td><td></td></tr>
+        <tr><td colspan="5" style="background:#0d1117;color:#8b949e;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;padding:8px 12px;">Operating Expenses</td></tr>
+        <tr><td>Property tax</td><td class="num">$8,346</td><td class="num">$12,010</td><td class="num">$12,122</td><td>2.44% × 80% of build</td></tr>
+        <tr><td>Insurance</td><td class="num">$4,276</td><td class="num">$6,151</td><td class="num">$6,209</td><td>1% of build</td></tr>
+        <tr><td>Property management</td><td class="num">$3,942</td><td class="num">$4,560</td><td class="num">$4,680</td><td>10% of GPR</td></tr>
+        <tr><td>Repairs &amp; maintenance</td><td class="num">$2,365</td><td class="num">$2,736</td><td class="num">$2,808</td><td>6% of GPR</td></tr>
+        <tr><td>CapEx reserve</td><td class="num">$1,183</td><td class="num">$1,368</td><td class="num">$1,404</td><td>3% of GPR</td></tr>
+        <tr><td>Leasing / turnover</td><td class="num">$600</td><td class="num">$1,200</td><td class="num">$600</td><td>$600/unit/yr</td></tr>
+        <tr><td>Utilities during vacancy</td><td class="num">$600</td><td class="num">$600</td><td class="num">$600</td><td>$50/mo</td></tr>
+        <tr class="subtotal"><td>Total Operating Expenses</td><td class="num">$21,312</td><td class="num">$28,625</td><td class="num">$28,423</td><td></td></tr>
+        <tr><td>Opex as % of GPR</td><td class="num">54.1%</td><td class="num">62.8%</td><td class="num">60.7%</td><td></td></tr>
+        <tr class="total"><td>NET OPERATING INCOME (NOI)</td><td class="num" style="color:#3fb950">$15,349</td><td class="num" style="color:#3fb950">$13,327</td><td class="num" style="color:#3fb950">$15,101</td><td></td></tr>
+        <tr><td>Cap rate on cost (NOI ÷ build)</td><td class="num bold" style="color:#3fb950">3.59%</td><td class="num" style="color:#f85149">2.17%</td><td class="num">2.43%</td><td>Unlevered yield</td></tr>
+      </tbody>
+    </table>
+    <p class="footnote">Property tax dominates opex (21-26% of GPR) — this is structural in Texas and cannot be meaningfully reduced. Insurance, management, maintenance, capex, and vacancy make up the remainder.</p>
+  </div>
+
+  <div class="card">
+    <h2>From NOI to After-Tax Cash Flow (Year 1)</h2>
+    <table>
+      <thead><tr><th>Step</th><th class="num">Option A: SFR</th><th class="num">Option B: Duplex</th><th class="num">Option C: 3-Story</th></tr></thead>
+      <tbody>
+        <tr><td>Net Operating Income</td><td class="num">$15,349</td><td class="num">$13,327</td><td class="num">$15,101</td></tr>
+        <tr><td>Less: Annual debt service (P&amp;I)</td><td class="num">($27,305)</td><td class="num">($40,793)</td><td class="num">($40,276)</td></tr>
+        <tr class="subtotal"><td>Pre-Tax Cash Flow</td><td class="num" style="color:#f85149">($11,956)</td><td class="num" style="color:#f85149">($27,466)</td><td class="num" style="color:#f85149">($25,175)</td></tr>
+        <tr><td>Add: Depreciation (non-cash)</td><td class="num">$13,215</td><td class="num">$19,013</td><td class="num">$19,193</td></tr>
+        <tr><td>Less: Mortgage interest (Yr 1)</td><td class="num">($23,755)</td><td class="num">($35,425)</td><td class="num">($35,137)</td></tr>
+        <tr><td>Taxable Income (Loss)</td><td class="num" style="color:#f85149">($21,621)</td><td class="num" style="color:#f85149">($41,111)</td><td class="num" style="color:#f85149">($39,229)</td></tr>
+        <tr><td>Tax Benefit at 32% marginal</td><td class="num" style="color:#3fb950">+$6,919</td><td class="num" style="color:#3fb950">+$13,156</td><td class="num" style="color:#3fb950">+$12,553</td></tr>
+        <tr class="total"><td>After-Tax Cash Flow (Yr 1)</td><td class="num" style="color:#f85149">($5,037)</td><td class="num" style="color:#f85149">($14,310)</td><td class="num" style="color:#f85149">($12,622)</td></tr>
+      </tbody>
+    </table>
+    <div class="info-box" style="margin-top: 16px;">
+      <strong>Why ATCF matters more than pre-tax CF for a hold:</strong> Depreciation is a non-cash expense that creates a real tax deduction. At 32% marginal, the $13,215 depreciation on Option A produces a $6,919 tax benefit — that's real money back in Josh's pocket that offsets more than half of the pre-tax loss. Passive activity loss rules (IRC §469) may limit when the benefit is realized — consult CPA.
+    </div>
+  </div>
+</div>
+
+<!-- ================ 30-YR HOLD ================ -->
+<div id="hold" class="panel">
+  <div class="card">
+    <h2>30-Year Hold Pro Forma — Cash Flow Trajectory</h2>
+    <p>At 80% debt and 7% rates, Year-1 cash flow is negative. But rents grow at 3%/yr while debt service stays fixed, so pre-tax cash flow crosses to positive around Year 4-5 (SFR), longer for duplex/3-story. After-tax cash flow (with depreciation shield) crosses positive even earlier.</p>
+    <div class="chart-container-tall"><canvas id="atcfChart"></canvas></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h2>Equity Build-Up Over Time</h2>
+      <p>Equity = property value − loan balance. Property appreciates at 3%/yr; loan amortizes down. By Year 30, loan is paid off and equity equals full property value.</p>
+      <div class="chart-container"><canvas id="equityChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Wealth Created (Cumulative)</h2>
+      <p>Cumulative total return = all ATCF + final equity value − initial equity. This is the true "how much richer am I" metric.</p>
+      <div class="chart-container"><canvas id="wealthChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Year-by-Year Pro Forma (Option A — SFR)</h2>
+    <div style="overflow-x: auto;">
+      <table style="font-size:12px;">
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th class="num">GPR</th>
+            <th class="num">NOI</th>
+            <th class="num">Debt Service</th>
+            <th class="num">Pre-Tax CF</th>
+            <th class="num">Tax Shield</th>
+            <th class="num">ATCF</th>
+            <th class="num">Property Value</th>
+            <th class="num">Loan Balance</th>
+            <th class="num">Equity</th>
+            <th class="num">Total Return</th>
+          </tr>
+        </thead>
+        <tbody id="proFormaTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ================ TOTAL RETURNS ================ -->
+<div id="returns" class="panel">
+  <div class="card">
+    <h2>Total Return Has Four Components</h2>
+    <p>A hold investor earns return from four distinct sources. Cash flow gets all the attention, but for a leveraged new-construction rental, the other three often exceed it — especially in early years.</p>
+
+    <div class="return-stack">
+      <div class="component cf">
+        <div class="label">1. Cash Flow</div>
+        <div class="value" style="color:#f85149">−$5,037</div>
+        <div class="sub">Yr-1 ATCF (negative)</div>
+      </div>
+      <div class="component pp">
+        <div class="label">2. Principal Paydown</div>
+        <div class="value" style="color:#58a6ff">+$3,550</div>
+        <div class="sub">Yr-1 mortgage amortization</div>
+      </div>
+      <div class="component ap">
+        <div class="label">3. Appreciation</div>
+        <div class="value" style="color:#3fb950">+$12,827</div>
+        <div class="sub">3% of $427K build</div>
+      </div>
+      <div class="component tx">
+        <div class="label">4. Already in Cash Flow</div>
+        <div class="value" style="color:#d29922">$6,919</div>
+        <div class="sub">Tax shield (embedded in ATCF)</div>
+      </div>
+    </div>
+    <p style="text-align:center; margin-top:18px; font-size:16px; color:#f0f6fc;">
+      <strong>Year-1 Total Return on Equity: −$5,037 + $3,550 + $12,827 = $11,340 on $86K equity = 13.3%</strong>
+    </p>
+    <p class="footnote">Appreciation is unrealized gain (paper), not cash — but it is real wealth. Principal paydown builds equity without tax consequence. Cash flow is where tax benefit shows up directly. This is why "is the property cash flow positive Year 1?" is the wrong question for a hold investor.</p>
+  </div>
+
+  <div class="card">
+    <h2>Levered Returns at Multiple Hold Horizons</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Hold Period</th>
+          <th class="num">Option A: SFR</th>
+          <th class="num">Option B: Duplex</th>
+          <th class="num">Option C: 3-Story</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>5-year IRR (annualized)</td><td class="num" style="color:#d29922">~6.3%</td><td class="num" style="color:#f85149">~0.0%</td><td class="num" style="color:#d29922">~3.8%</td></tr>
+        <tr style="background: rgba(88,166,255,0.08);"><td class="bold">10-year IRR (annualized)</td><td class="num bold" style="color:#3fb950">~8.6%</td><td class="num" style="color:#f85149">~4.5%</td><td class="num" style="color:#d29922">~7.4%</td></tr>
+        <tr><td>15-year IRR (annualized)</td><td class="num" style="color:#3fb950">~9.1%</td><td class="num" style="color:#d29922">~6.2%</td><td class="num" style="color:#3fb950">~8.3%</td></tr>
+        <tr><td>20-year IRR (annualized)</td><td class="num" style="color:#3fb950">~9.4%</td><td class="num" style="color:#d29922">~7.7%</td><td class="num" style="color:#3fb950">~9.0%</td></tr>
+        <tr><td>30-year IRR (annualized, debt paid off)</td><td class="num" style="color:#3fb950">~8.2%</td><td class="num" style="color:#d29922">~6.9%</td><td class="num" style="color:#3fb950">~7.8%</td></tr>
+        <tr class="total"><td>Equity multiple at 10 years</td><td class="num">2.29×</td><td class="num">1.56×</td><td class="num">2.04×</td></tr>
+        <tr class="total"><td>Equity multiple at 20 years</td><td class="num">6.0×</td><td class="num">4.45×</td><td class="num">5.55×</td></tr>
+        <tr class="total"><td>Equity multiple at 30 years</td><td class="num">10.76×</td><td class="num">7.43×</td><td class="num">9.44×</td></tr>
+        <tr class="total"><td>Total wealth at Year 30</td><td class="num">~$920K</td><td class="num">~$925K</td><td class="num">~$1,172K</td></tr>
+      </tbody>
+    </table>
+    <p class="footnote">IRR approximation: ((net sale proceeds + cumulative ATCF) / initial equity)^(1/hold years) − 1. Treats all cash flow as received at exit. Full Excel model computes more precise IRRs using the ATCF column in the 30-year pro forma.</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h2>IRR vs Hold Period</h2>
+      <div class="chart-container"><canvas id="irrChart"></canvas></div>
+      <p class="footnote">IRR peaks around Year 15-20 for Option A — the sweet spot between leverage still being amplified and long-duration appreciation compounding. Shorter holds don't amortize enough principal; much longer holds dilute IRR with de-levered later years.</p>
+    </div>
+    <div class="card">
+      <h2>Absolute Wealth Generation</h2>
+      <div class="chart-container"><canvas id="absWealthChart"></canvas></div>
+      <p class="footnote"><strong>Efficiency (Option A) vs Scale (Option C):</strong> If you're rate-constrained on capital, Option A generates the best return per dollar invested. If you have capital to deploy and want max absolute wealth on this specific lot, Option C (3-story) generates ~27% more at Year 30 — at the cost of $40K more equity and 100 bps lower IRR.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================ SENSITIVITY ================ -->
+<div id="sensitivity" class="panel">
+  <div class="card">
+    <h2>Option A: 10-Year IRR Sensitivity — Rent × Appreciation</h2>
+    <p>How the 10-year levered IRR changes with rent and appreciation assumptions. <span style="color:#3fb950">Green</span> = strong return; <span style="color:#d29922">yellow</span> = marginal; <span style="color:#f85149">red</span> = poor.</p>
+    <table id="sensTable1"></table>
+    <p class="footnote">Base case: $3,285/mo rent (130 Valero Zestimate) × 3% appreciation = ~8.6% IRR. Downside protection: even at $2,800/mo and 1.5% appreciation, IRR stays positive.</p>
+  </div>
+
+  <div class="card">
+    <h2>Option A: Year-1 Pre-Tax Cash Flow — Rent × Perm Rate</h2>
+    <p>How Year-1 pre-tax CF responds to rent and interest rate. Shows the "cross-over" point where CF turns positive.</p>
+    <table id="sensTable2"></table>
+    <p class="footnote">Current base case ($3,285 rent, 7.0% rate): Yr-1 pre-tax CF ≈ −$12K. To get Year-1 CF to zero at 7% rate, need rent of ~$3,900/mo OR rate drop to 5.5%. Refinance-when-rates-fall is a credible path.</p>
+  </div>
+
+  <div class="card">
+    <h2>Breakeven Points (Option A)</h2>
+    <table>
+      <thead><tr><th>Metric</th><th>Base Case</th><th>Breakeven</th><th>Gap</th></tr></thead>
+      <tbody>
+        <tr><td>Rent for Year-1 pre-tax CF = 0</td><td>$3,285/mo</td><td>$3,881/mo</td><td class="num" style="color:#d29922">+$596/mo (18%)</td></tr>
+        <tr><td>Rent for Year-1 ATCF = 0</td><td>$3,285/mo</td><td>$3,450/mo</td><td class="num" style="color:#3fb950">+$165/mo (5%)</td></tr>
+        <tr><td>Perm rate for Year-1 pre-tax CF = 0</td><td>7.00%</td><td>~5.2%</td><td class="num" style="color:#d29922">−180 bps</td></tr>
+        <tr><td>Perm rate for Year-1 ATCF = 0</td><td>7.00%</td><td>~6.4%</td><td class="num" style="color:#3fb950">−60 bps</td></tr>
+        <tr><td>Appreciation for Yr-10 IRR &gt; 10%</td><td>3.00%</td><td>~3.8%</td><td class="num" style="color:#d29922">+80 bps</td></tr>
+        <tr><td>Build cost cap for Yr-10 IRR &gt; 8%</td><td>$428K</td><td>$460K</td><td class="num" style="color:#3fb950">+$32K ceiling</td></tr>
+      </tbody>
+    </table>
+    <div class="info-box">
+      <strong>Key insight:</strong> The "ATCF breakeven" is much easier to hit than pre-tax breakeven because of the depreciation shield. At current rent, Year-1 ATCF is already within 5% of zero. Any of the following pushes into positive ATCF territory quickly: one rent bump at renewal, modest refi, or simply holding until Year 3.
+    </div>
+  </div>
+</div>
+
+<!-- ================ RECOMMENDATION ================ -->
+<div id="recommendation" class="panel">
+  <div class="recommendation-banner">
+    <div class="label">Final Recommendation — For a Buy-and-Hold Investor</div>
+    <h2>Build Option A: 1,700 sf 3BR/2BA Two-Story Modern SFR</h2>
+    <div class="summary">
+      Replicate 130 Valero's product: 2-story modern, 3/2, quartz counters, LVP floors, Hardie siding, modest front yard, small covered porch. Target $185/sf hard cost → $428K all-in. Rent at $3,285/mo (matching 130 Valero's current Zestimate). Hold through rate cycle, refinance when rates fall to 5-5.5%, then cash flow goes positive and the asset becomes a long-term wealth compounder.
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h2>Why Option A Is the Right Hold Vehicle</h2>
+      <ul class="clean check">
+        <li><strong>Highest unlevered yield (3.6%):</strong> The single most important metric for a leveraged hold. Duplex and 3-story both dilute yield with higher build cost.</li>
+        <li><strong>Lowest capital lock-up:</strong> $86K equity vs $124-125K. 31-32% less capital at risk for better %-return.</li>
+        <li><strong>Direct gold-standard rent comp:</strong> 130 Valero is the same product on the same block. No underwriting guessing.</li>
+        <li><strong>Fastest to cash flow:</strong> By-right + non-historic = 2-3 month entitlement, 10-month build = rent-producing at Month 13 vs 24+ for duplex.</li>
+        <li><strong>Easiest refinance path:</strong> Owner-occupied or investment SFR gets best loan terms (5.5-6% owner-occ, 6.75-7.25% investment) when rates drop.</li>
+        <li><strong>Cleanest exit if strategy changes:</strong> SFR sells fast in Tobin Hill (large buyer pool). Duplex has a tiny pool.</li>
+        <li><strong>10-Year IRR ~8.6% · 20-Year IRR ~9.4%</strong> — strong long-term wealth builder.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Action Checklist</h2>
+      <h3>Pre-Development (Month 0-2)</h3>
+      <ul class="clean">
+        <li>Pull BCAD parcel data (confirm 5,096 sf)</li>
+        <li>COSA zoning viewer — verify R-4/R-5 and NO "H" overlay</li>
+        <li>DSD zoning verification letter (210-207-1111)</li>
+        <li>SAWS service availability letter (210-233-2009)</li>
+        <li>Boundary + topo survey ($800)</li>
+        <li>Geotech report ($2-3K)</li>
+        <li><strong>Validate $3,285 rent</strong> with 2-3 active/recent 3BR rental listings on/near Valero</li>
+      </ul>
+      <h3>Design (Month 2-4)</h3>
+      <ul class="clean">
+        <li>Hire architect familiar with modern infill (target $25K fee)</li>
+        <li>Design to 130 Valero's massing: 2-story, ~1,700 sf, porch, modest front setback</li>
+        <li>Finish spec: LVP floors, quartz counters, subway tile baths, stainless appliance pkg, 9-ft ceilings</li>
+      </ul>
+      <h3>Financing (Month 3-5)</h3>
+      <ul class="clean">
+        <li>Shop construction-to-perm: RBFCU, Texans CU, Jefferson Bank, Frost</li>
+        <li>Target 7.0-7.5% construction, 7.0% perm, 80% LTC</li>
+        <li>Consider "one-time-close" to avoid re-underwriting at perm</li>
+        <li>Builder's risk insurance quote</li>
+      </ul>
+      <h3>Construction (Month 5-15)</h3>
+      <ul class="clean">
+        <li>3 GC bids — target ≤ $185/sf hard cost</li>
+        <li>Fixed-price contract, milestone draws</li>
+        <li>Target 10-month build duration</li>
+      </ul>
+      <h3>Lease-Up (Month 15-17)</h3>
+      <ul class="clean">
+        <li>Professional photos + 3D tour</li>
+        <li>Target young professional couple or small family (Pearl commuter profile)</li>
+        <li>$3,285/mo asking; accept $3,200/mo floor</li>
+        <li>Screen aggressively: 3× income, 680+ credit, verifiable employment</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>When to Revisit Option B (Duplex) or Option C (3-Story)</h2>
+    <table>
+      <thead><tr><th>Condition</th><th>Recommendation Changes To</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>SA passes missing-middle reform (duplex-by-right in R-4/R-5)</strong></td>
+          <td>Run Option B again — could change the answer if entitlement risk disappears</td>
+        </tr>
+        <tr>
+          <td><strong>Perm rates drop to 5.0-5.5%</strong></td>
+          <td>Refi Option A (big Yr-1 CF improvement); Option C also becomes viable</td>
+        </tr>
+        <tr>
+          <td><strong>Tobin Hill rents accelerate (20%+ in 2 years)</strong></td>
+          <td>Option C starts to beat Option A on scale; reconsider for second build</td>
+        </tr>
+        <tr>
+          <td><strong>You want max absolute wealth on this specific lot</strong></td>
+          <td>Option C: ~$1.17M at Yr 30 vs $920K for Option A — at cost of lower %</td>
+        </tr>
+        <tr>
+          <td><strong>You might own-occupy someday</strong></td>
+          <td>Option C (3-story w/ garage) is a better personal residence than 1,700 sf SFR</td>
+        </tr>
+        <tr>
+          <td><strong>You want to scale a rental portfolio</strong></td>
+          <td>Option A × 3 lots beats Option C × 1 lot on efficiency</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>The Honest Truth</h2>
+    <p>New-construction rental at 80% debt in 2026 Texas <strong>does not cash-flow positively in Year 1</strong>. That's structural across the entire market — not a bug in this specific deal. The investors making money right now are those who:</p>
+    <ol style="padding-left:22px; margin-top:10px;">
+      <li style="margin-bottom:6px;">Already own the land (no land basis) — <strong>✓ you</strong></li>
+      <li style="margin-bottom:6px;">Accept 2-3 years of negative pre-tax CF as the price of admission</li>
+      <li style="margin-bottom:6px;">Plan to refinance when rates drop to 5-5.5% (likely 2027-2028)</li>
+      <li style="margin-bottom:6px;">Value the depreciation tax shield (currently ~$6.9K/yr after-tax benefit)</li>
+      <li style="margin-bottom:6px;">Have long time horizons (15+ years) to let appreciation and paydown work</li>
+    </ol>
+    <p style="margin-top:12px;">If ALL of those apply to you — Option A pencils as an <strong>~9-10% long-term levered return</strong> on a tangible asset. That's competitive with the S&amp;P 500's historical average, with tangible collateral, inflation protection, and tax benefits not available in stocks. The fact that Year-1 ATCF is −$5K is not disqualifying; it's the entry ticket.</p>
+    <p style="margin-top:12px;"><strong>If any of them don't apply</strong> (e.g., you need cash flow today, won't hold 15+ years, can't stomach refinancing risk) — sell the lot and put the proceeds in a higher-yield passive vehicle. Don't build.</p>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ===== Hold model computation =====
+function computeHold(scenario) {
+    const buildCost = scenario.buildCost;
+    const equity = buildCost * 0.20;
+    const debt = buildCost * 0.80;
+    const rent = scenario.rent;
+    const units = scenario.units;
+    const permRate = scenario.permRate;
+    const amortYrs = 30;
+    const rentGrowth = 0.03;
+    const opexInfl = 0.025;
+    const appreciation = scenario.appreciation;
+    const vacancy = scenario.vacancy;
+    const ptaxRate = 0.0244;
+    const insPct = 0.01;
+    const mgmtPct = 0.10;
+    const maintPct = 0.06;
+    const capexPct = 0.03;
+    const leasing = 600 * units;
+    const utilVac = 600;
+    const landPct = 0.15;
+    const deprecYrs = 27.5;
+    const marginal = 0.32;
+
+    const r = permRate / 12;
+    const n = amortYrs * 12;
+    const pmt = debt * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1);
+    const annualDS = pmt * 12;
+    const depreciation = buildCost * (1 - landPct) / deprecYrs;
+
+    const results = [];
+    let loanBalance = debt;
+    let cumATCF = 0;
+    let prevEquity = equity;
+
+    for (let yr = 1; yr <= 30; yr++) {
+        const gpr = rent * units * 12 * Math.pow(1 + rentGrowth, yr - 1);
+        const vacD = gpr * vacancy;
+        const egi = gpr - vacD;
+
+        const assessPct = yr <= 2 ? 0.80 : 1.00;
+        const ptax = buildCost * assessPct * ptaxRate * Math.pow(1 + opexInfl, yr - 1);
+        const ins = buildCost * insPct * Math.pow(1 + opexInfl, yr - 1);
+        const mgmt = gpr * mgmtPct;
+        const maint = gpr * maintPct;
+        const capex = gpr * capexPct;
+        const totalOpex = ptax + ins + mgmt + maint + capex + leasing + utilVac;
+        const noi = egi - totalOpex;
+
+        let yearInterest = 0;
+        let yearPrincipal = 0;
+        for (let m = 1; m <= 12; m++) {
+            const monthInt = loanBalance * r;
+            const monthPrin = pmt - monthInt;
+            yearInterest += monthInt;
+            yearPrincipal += monthPrin;
+            loanBalance -= monthPrin;
+        }
+        if (loanBalance < 0) loanBalance = 0;
+
+        const preTaxCF = noi - annualDS;
+        const taxableIncome = noi - yearInterest - depreciation;
+        const taxBenefit = -taxableIncome * marginal;
+        const atcf = preTaxCF + taxBenefit;
+        cumATCF += atcf;
+
+        const propertyValue = buildCost * Math.pow(1 + appreciation, yr);
+        const equityValue = propertyValue - loanBalance;
+        const totalReturn = atcf + (equityValue - prevEquity);
+        prevEquity = equityValue;
+
+        results.push({
+            year: yr, gpr, egi, noi, annualDS, preTaxCF,
+            yearInterest, yearPrincipal, depreciation, taxableIncome, taxBenefit,
+            atcf, cumATCF, propertyValue, loanBalance, equityValue, totalReturn
+        });
+    }
+    return { equity, debt, buildCost, annualDS, results };
+}
+
+// Build costs include Ashby-side sewer lateral run (~$10K adder vs prior)
+const scenA = computeHold({ buildCost: 437554, rent: 3285, units: 1, permRate: 0.07, appreciation: 0.03, vacancy: 0.07 });
+const scenB = computeHold({ buildCost: 625103, rent: 1900, units: 2, permRate: 0.0725, appreciation: 0.025, vacancy: 0.08 });
+const scenC = computeHold({ buildCost: 630935, rent: 3900, units: 1, permRate: 0.0715, appreciation: 0.03, vacancy: 0.07 });
+// Option D: Modern 2-story duplex, 1,500 sf/unit with rooftop patios — premium townhome product
+const scenD = computeHold({ buildCost: 959000, rent: 2900, units: 2, permRate: 0.0725, appreciation: 0.025, vacancy: 0.08 });
+
+// Flip strategy exit values per scenario: [conservative, base, mid, upside]
+const flipExits = {
+  A: { size: 1700, conservative: 250, base: 275, mid: 300, upside: 325, cycleMonths: 15, build: 437554 },
+  B: { size: 2000, conservative: 230, base: 250, mid: 270, upside: 290, cycleMonths: 22, build: 625103 },
+  C: { size: 2000, conservative: 255, base: 280, mid: 305, upside: 330, cycleMonths: 17, build: 630935 },
+  D: { size: 3000, conservative: 275, base: 300, mid: 325, upside: 350, cycleMonths: 22, build: 959000 }
+};
+
+// Tab switching
+function switchTab(e, id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  e.currentTarget.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// Mode switching (HOLD / FLIP)
+function switchMode(mode) {
+  document.body.classList.toggle('flip-mode', mode === 'flip');
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+}
+
+// ===== Populate dynamic Summary comparison table =====
+function approxIRR(scen, yrs) {
+  const r = scen.results[yrs - 1];
+  const netSale = r.propertyValue * 0.93 - r.loanBalance;
+  const cumATCF = r.cumATCF;
+  const total = netSale + cumATCF;
+  if (total <= 0) return -0.10;
+  return Math.pow(total / scen.equity, 1/yrs) - 1;
+}
+
+function fmtMoney(n, divisor = 1000, suffix = 'K') {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  const sign = n < 0 ? '−' : '';
+  const abs = Math.abs(n) / divisor;
+  return sign + '$' + Math.round(abs) + suffix;
+}
+function fmtPct(n) { return (n*100).toFixed(1) + '%'; }
+function clr(n, goodAbove = 0) {
+  return n >= goodAbove ? '#3fb950' : n >= -5 ? '#d29922' : '#f85149';
+}
+
+function populateSummaryTable() {
+  const scenarios = [
+    { key: 'A', scen: scenA, label: 'SFR' },
+    { key: 'B', scen: scenB, label: 'Duplex' },
+    { key: 'C', scen: scenC, label: '3-Story' },
+    { key: 'D', scen: scenD, label: 'Premium Duplex' }
+  ];
+  const tbody = document.getElementById('summaryTable');
+  if (!tbody) return;
+
+  const rows = [
+    { label: 'All-in development cost', fn: s => s.scen.buildCost, fmt: 'money' },
+    { label: 'Equity required (20%)', fn: s => s.scen.equity, fmt: 'money' },
+    { label: 'Permanent loan (80%)', fn: s => s.scen.debt, fmt: 'money' },
+    { label: 'Year-1 GPR', fn: s => s.scen.results[0].gpr, fmt: 'money' },
+    { label: 'Year-1 NOI', fn: s => s.scen.results[0].noi, fmt: 'money' },
+    { label: 'Unlevered yield on cost', fn: s => s.scen.results[0].noi / s.scen.buildCost, fmt: 'pct', bold: true, best: 'max' },
+    { label: 'Year-1 debt service', fn: s => s.scen.annualDS, fmt: 'money' },
+    { label: 'Year-1 pre-tax cash flow', fn: s => s.scen.results[0].preTaxCF, fmt: 'money', colorize: true },
+    { label: 'Year-1 after-tax cash flow', fn: s => s.scen.results[0].atcf, fmt: 'money', colorize: true },
+    { label: 'Year-1 total return ROE', fn: s => s.scen.results[0].totalReturn / s.scen.equity, fmt: 'pct', colorize: true, bold: true, best: 'max' },
+    { label: '10-Year Levered IRR', fn: s => approxIRR(s.scen, 10), fmt: 'pct', colorize: true, bold: true, best: 'max', header: true },
+    { label: '20-Year Levered IRR', fn: s => approxIRR(s.scen, 20), fmt: 'pct', colorize: true, best: 'max' },
+    { label: '30-Yr Wealth Generated', fn: s => s.scen.results[29].equityValue - s.scen.equity + s.scen.results[29].cumATCF, fmt: 'money' },
+    { label: 'Entitlement Risk', fn: s => ({A: 'Low · by-right', B: 'HIGH · rezone', C: 'Low · by-right', D: 'HIGH · rezone'})[s.key], fmt: 'text' }
+  ];
+
+  let html = '';
+  rows.forEach(row => {
+    const values = scenarios.map(s => row.fn(s));
+    const boldClass = row.bold ? 'bold' : '';
+    const winnerClass = row.header ? ' class="winner"' : '';
+    html += `<tr${winnerClass}><td${row.bold ? ' class="bold"' : ''}>${row.label}</td>`;
+    values.forEach((v, i) => {
+      let display;
+      let style = '';
+      if (row.fmt === 'money') {
+        display = fmtMoney(v);
+        if (row.colorize) style = `color:${v >= 0 ? '#3fb950' : '#f85149'}`;
+      } else if (row.fmt === 'pct') {
+        display = fmtPct(v);
+        if (row.colorize || row.best === 'max') {
+          const rank = [...values].sort((a,b)=>b-a).indexOf(v);
+          if (rank === 0) style = 'color:#3fb950;background:rgba(63,185,80,0.08)';
+          else if (v > 0.05) style = 'color:#d29922';
+          else style = 'color:#f85149';
+        }
+      } else {
+        display = v;
+        if (v && v.includes && v.includes('HIGH')) style = 'color:#f85149';
+        else if (v && v.includes && v.includes('Low')) style = 'color:#3fb950';
+      }
+      html += `<td class="num ${boldClass}" style="${style}">${display}</td>`;
+    });
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+// Chart.js defaults
+Chart.defaults.color = '#c9d1d9';
+Chart.defaults.borderColor = '#30363d';
+
+const years = Array.from({length: 30}, (_, i) => i + 1);
+
+// Cost Stack Chart
+new Chart(document.getElementById('costStackChart'), {
+  type: 'bar',
+  data: {
+    labels: ['A: SFR\n1,700sf', 'B: Duplex\n2,000sf', 'C: 3-Story\n2,000sf', 'D: Premium Duplex\n3,000sf'],
+    datasets: [
+      { label: 'Hard cost', data: [314500, 420000, 450000, 660000], backgroundColor: '#1f6feb' },
+      { label: 'Site/Util (incl. Ashby sewer)', data: [40500, 60500, 45500, 57500], backgroundColor: '#58a6ff' },
+      { label: 'Soft costs', data: [38660, 53100, 60500, 102490], backgroundColor: '#3fb950' },
+      { label: 'Rezone/IDZ', data: [0, 15000, 0, 15000], backgroundColor: '#f85149' },
+      { label: 'Contingency', data: [25160, 42000, 45000, 66000], backgroundColor: '#d29922' },
+      { label: 'Financing', data: [18734, 34503, 29435, 58010], backgroundColor: '#a371f7' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString() } }
+    },
+    scales: {
+      x: { stacked: true, grid: { display: false } },
+      y: { stacked: true, ticks: { callback: v => '$' + (v/1000) + 'K' } }
+    }
+  }
+});
+
+// $/sf Chart
+new Chart(document.getElementById('psfChart'), {
+  type: 'bar',
+  data: {
+    labels: ['A: SFR', 'B: Duplex', 'C: 3-Story', 'D: Premium Duplex'],
+    datasets: [{
+      label: 'All-in $/sqft',
+      data: [257, 313, 315, 320],
+      backgroundColor: ['#58a6ff', '#d29922', '#a371f7', '#f85149']
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { ticks: { callback: v => '$' + v } } }
+  }
+});
+
+// ATCF Chart — 30 yr line for all 4 scenarios
+new Chart(document.getElementById('atcfChart'), {
+  type: 'line',
+  data: {
+    labels: years,
+    datasets: [
+      { label: 'A: SFR', data: scenA.results.map(r => r.atcf), borderColor: '#58a6ff', tension: 0.3, borderWidth: 2.5 },
+      { label: 'B: Duplex', data: scenB.results.map(r => r.atcf), borderColor: '#d29922', tension: 0.3, borderWidth: 2.5 },
+      { label: 'C: 3-Story SFR', data: scenC.results.map(r => r.atcf), borderColor: '#a371f7', tension: 0.3, borderWidth: 2.5 },
+      { label: 'D: Premium Duplex', data: scenD.results.map(r => r.atcf), borderColor: '#f85149', tension: 0.3, borderWidth: 2.5 },
+      { label: 'Break-Even', data: Array(30).fill(0), borderColor: '#6e7681', borderDash: [6,6], pointRadius: 0, borderWidth: 1.5 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + Math.round(ctx.parsed.y).toLocaleString() } }
+    },
+    scales: {
+      x: { title: { display: true, text: 'Year' } },
+      y: { ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'K' } }
+    }
+  }
+});
+
+// Equity Chart
+new Chart(document.getElementById('equityChart'), {
+  type: 'line',
+  data: {
+    labels: years,
+    datasets: [
+      { label: 'A: SFR', data: scenA.results.map(r => r.equityValue), borderColor: '#58a6ff', tension: 0.3, borderWidth: 2.5 },
+      { label: 'B: Duplex', data: scenB.results.map(r => r.equityValue), borderColor: '#d29922', tension: 0.3, borderWidth: 2.5 },
+      { label: 'C: 3-Story', data: scenC.results.map(r => r.equityValue), borderColor: '#a371f7', tension: 0.3, borderWidth: 2.5 },
+      { label: 'D: Premium Duplex', data: scenD.results.map(r => r.equityValue), borderColor: '#f85149', tension: 0.3, borderWidth: 2.5 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + Math.round(ctx.parsed.y/1000) + 'K' } }
+    },
+    scales: { y: { ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'K' } } }
+  }
+});
+
+// Cumulative Wealth Chart
+new Chart(document.getElementById('wealthChart'), {
+  type: 'line',
+  data: {
+    labels: years,
+    datasets: [
+      { label: 'A: SFR', data: scenA.results.map(r => r.equityValue - scenA.equity + r.cumATCF), borderColor: '#58a6ff', tension: 0.3, borderWidth: 2.5 },
+      { label: 'B: Duplex', data: scenB.results.map(r => r.equityValue - scenB.equity + r.cumATCF), borderColor: '#d29922', tension: 0.3, borderWidth: 2.5 },
+      { label: 'C: 3-Story', data: scenC.results.map(r => r.equityValue - scenC.equity + r.cumATCF), borderColor: '#a371f7', tension: 0.3, borderWidth: 2.5 },
+      { label: 'D: Premium Duplex', data: scenD.results.map(r => r.equityValue - scenD.equity + r.cumATCF), borderColor: '#f85149', tension: 0.3, borderWidth: 2.5 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + Math.round(ctx.parsed.y/1000) + 'K' } }
+    },
+    scales: { y: { ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'K' } } }
+  }
+});
+
+// Pro Forma table
+const tbody = document.getElementById('proFormaTable');
+const rowsToShow = [1, 2, 3, 5, 7, 10, 15, 20, 25, 30];
+rowsToShow.forEach(yr => {
+  const r = scenA.results[yr - 1];
+  const totalR = r.totalReturn;
+  const atcfColor = r.atcf >= 0 ? '#3fb950' : '#f85149';
+  const cfColor = r.preTaxCF >= 0 ? '#3fb950' : '#f85149';
+  tbody.innerHTML += `
+    <tr>
+      <td class="bold">${yr}</td>
+      <td class="num">$${Math.round(r.gpr/1000)}K</td>
+      <td class="num">$${Math.round(r.noi/1000)}K</td>
+      <td class="num">$${Math.round(r.annualDS/1000)}K</td>
+      <td class="num" style="color:${cfColor}">$${Math.round(r.preTaxCF/1000)}K</td>
+      <td class="num" style="color:#d29922">+$${Math.round(r.taxBenefit/1000)}K</td>
+      <td class="num" style="color:${atcfColor}">$${Math.round(r.atcf/1000)}K</td>
+      <td class="num">$${Math.round(r.propertyValue/1000)}K</td>
+      <td class="num">$${Math.round(r.loanBalance/1000)}K</td>
+      <td class="num bold">$${Math.round(r.equityValue/1000)}K</td>
+      <td class="num" style="color:#3fb950">+$${Math.round(totalR/1000)}K</td>
+    </tr>`;
+});
+
+const irrHorizons = [5, 10, 15, 20, 25, 30];
+new Chart(document.getElementById('irrChart'), {
+  type: 'line',
+  data: {
+    labels: irrHorizons.map(y => y + '-yr'),
+    datasets: [
+      { label: 'A: SFR', data: irrHorizons.map(y => approxIRR(scenA, y)), borderColor: '#58a6ff', tension: 0.3, borderWidth: 2.5 },
+      { label: 'B: Duplex', data: irrHorizons.map(y => approxIRR(scenB, y)), borderColor: '#d29922', tension: 0.3, borderWidth: 2.5 },
+      { label: 'C: 3-Story', data: irrHorizons.map(y => approxIRR(scenC, y)), borderColor: '#a371f7', tension: 0.3, borderWidth: 2.5 },
+      { label: 'D: Premium Duplex', data: irrHorizons.map(y => approxIRR(scenD, y)), borderColor: '#f85149', tension: 0.3, borderWidth: 2.5 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y * 100).toFixed(1) + '%' } }
+    },
+    scales: { y: { ticks: { callback: v => (v * 100).toFixed(1) + '%' } } }
+  }
+});
+
+// Absolute wealth chart — dynamic from scen data
+function wealthAt(scen, yr) {
+  const r = scen.results[yr - 1];
+  return Math.round((r.equityValue - scen.equity + r.cumATCF) / 1000);
+}
+new Chart(document.getElementById('absWealthChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Year 10', 'Year 20', 'Year 30'],
+    datasets: [
+      { label: 'A: SFR', data: [wealthAt(scenA,10), wealthAt(scenA,20), wealthAt(scenA,30)], backgroundColor: '#58a6ff' },
+      { label: 'B: Duplex', data: [wealthAt(scenB,10), wealthAt(scenB,20), wealthAt(scenB,30)], backgroundColor: '#d29922' },
+      { label: 'C: 3-Story', data: [wealthAt(scenC,10), wealthAt(scenC,20), wealthAt(scenC,30)], backgroundColor: '#a371f7' },
+      { label: 'D: Premium Duplex', data: [wealthAt(scenD,10), wealthAt(scenD,20), wealthAt(scenD,30)], backgroundColor: '#f85149' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y + 'K' } }
+    },
+    scales: { y: { ticks: { callback: v => '$' + v + 'K' } } }
+  }
+});
+
+// Sensitivity table: Rent × Appreciation → 10-yr IRR (Option A)
+function compute10YrIRR(rent, appreciation) {
+  const scen = computeHold({ buildCost: 427554, rent: rent, units: 1, permRate: 0.07, appreciation: appreciation, vacancy: 0.07 });
+  return approxIRR(scen, 10);
+}
+
+const rents = [2800, 3000, 3100, 3200, 3285, 3400, 3500, 3700, 3900];
+const apprs = [0.015, 0.02, 0.025, 0.03, 0.035, 0.04, 0.045];
+
+let sensHTML1 = '<thead><tr><th>Rent ↓ / Appreciation →</th>';
+apprs.forEach(a => { sensHTML1 += `<th class="num">${(a*100).toFixed(1)}%</th>`; });
+sensHTML1 += '</tr></thead><tbody>';
+rents.forEach(rt => {
+  sensHTML1 += `<tr><td class="bold num">$${rt}</td>`;
+  apprs.forEach(a => {
+    const irr = compute10YrIRR(rt, a);
+    const pct = irr * 100;
+    let color = '#f85149', bg = 'rgba(248,81,73,0.10)';
+    if (pct > 10) { color = '#3fb950'; bg = 'rgba(63,185,80,0.18)'; }
+    else if (pct > 7) { color = '#3fb950'; bg = 'rgba(63,185,80,0.08)'; }
+    else if (pct > 4) { color = '#d29922'; bg = 'rgba(210,153,34,0.10)'; }
+    sensHTML1 += `<td class="num" style="color:${color};background:${bg};font-weight:600">${pct.toFixed(1)}%</td>`;
+  });
+  sensHTML1 += '</tr>';
+});
+sensHTML1 += '</tbody>';
+document.getElementById('sensTable1').innerHTML = sensHTML1;
+
+// Sensitivity table 2: Rent × Rate → Yr-1 pre-tax CF
+function computeYr1CF(rent, rate) {
+  const scen = computeHold({ buildCost: 427554, rent: rent, units: 1, permRate: rate, appreciation: 0.03, vacancy: 0.07 });
+  return scen.results[0].preTaxCF;
+}
+
+const rates = [0.045, 0.05, 0.055, 0.06, 0.065, 0.07, 0.075, 0.08];
+let sensHTML2 = '<thead><tr><th>Rent ↓ / Perm Rate →</th>';
+rates.forEach(r => { sensHTML2 += `<th class="num">${(r*100).toFixed(1)}%</th>`; });
+sensHTML2 += '</tr></thead><tbody>';
+rents.forEach(rt => {
+  sensHTML2 += `<tr><td class="bold num">$${rt}</td>`;
+  rates.forEach(r => {
+    const cf = computeYr1CF(rt, r);
+    let color = '#f85149', bg = 'rgba(248,81,73,0.10)';
+    if (cf > 5000) { color = '#3fb950'; bg = 'rgba(63,185,80,0.18)'; }
+    else if (cf > 0) { color = '#3fb950'; bg = 'rgba(63,185,80,0.08)'; }
+    else if (cf > -10000) { color = '#d29922'; bg = 'rgba(210,153,34,0.10)'; }
+    sensHTML2 += `<td class="num" style="color:${color};background:${bg};font-weight:600">$${(cf/1000).toFixed(1)}K</td>`;
+  });
+  sensHTML2 += '</tr>';
+});
+sensHTML2 += '</tbody>';
+document.getElementById('sensTable2').innerHTML = sensHTML2;
+
+// Populate dynamic Summary comparison
+populateSummaryTable();
+
+</script>
+</body>
+</html>
